@@ -135,39 +135,40 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <script>
-        const { jsPDF } = window.jspdf;
+    const { jsPDF } = window.jspdf;
 
-        document.getElementById('saveBtn').addEventListener('click', () => {
-            const pdfContent = document.getElementById('pdf-content');
+    document.getElementById('saveBtn').addEventListener('click', () => {
+        const pdfContent = document.getElementById('pdf-content');
 
-            html2canvas(pdfContent).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'pt', 'a4');
+        // Adjust the scale if you want smaller images (default is devicePixelRatio)
+        // html2canvas(pdfContent, { scale: 1 })
+        html2canvas(pdfContent).then(canvas => {
+            // Use JPEG format and a reduced quality to shrink file size
+            const imgData = canvas.toDataURL('image/jpeg', 0.7);
 
-                // Calculate image width/height to maintain aspect ratio on A4 page (595.28 x 841.89)
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                
-                // Scale image to PDF width
-                const imgWidth = pdfWidth;
-                const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+            const pdf = new jsPDF('p', 'pt', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
 
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            const imgWidth = pdfWidth;
+            const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-                // If content height exceeds one page, add new pages for overflow
-                let heightLeft = imgHeight - pdfHeight;
-                let position = 0;
+            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
 
-                while (heightLeft > 0) {
-                    position = position - pdfHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pdfHeight;
-                }
+            let heightLeft = imgHeight - pdfHeight;
+            let position = 0;
 
-                pdf.save("cornell_notes.pdf");
-            });
+            // If content runs off one page, add more pages
+            while (heightLeft > 0) {
+                position = position - pdfHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
+
+            pdf.save("cornell_notes.pdf");
         });
-    </script>
+    });
+</script>
 </body>
 </html>
